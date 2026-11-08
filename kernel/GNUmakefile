@@ -94,7 +94,7 @@ override CFLAGS += \
     -fno-stack-protector \
     -fno-stack-check \
     -fno-PIC \
-    -ffunction-sections \
+    -ffunction-sections \ 
     -fdata-sections \
     -m64 \
     -march=x86-64 \

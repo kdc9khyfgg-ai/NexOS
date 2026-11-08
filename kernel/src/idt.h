@@ -59,6 +59,8 @@ extern volatile uint8_t idt_last_scancode;
 
 void idt_init(void);
 
+void irq_handler(struct idt_exception_frame* frame);
+
 void idt_exception_report(
     struct idt_exception_frame* frame
 );

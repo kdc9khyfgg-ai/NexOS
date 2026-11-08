@@ -677,7 +677,9 @@ static void fb_pattern(struct limine_framebuffer* fb) {
     }
 }
 
-// Rellena un rectangulo de un color.
+// Rellena un rectangulo de un color
+// (Todavia no se usa: queda lista para la terminal y la GUI)
+__attribute__((unused))
 static void fb_fill_rect(
     struct limine_framebuffer* fb,
     size_t x,
@@ -693,36 +695,18 @@ static void fb_fill_rect(
     }
 }
 
-// Muestra cuantas interrupciones de teclado llegaron y el ultimo scancode.
-static void fb_draw_keyboard_test(struct limine_framebuffer* fb) {
-    const size_t escala = 2;
-    const size_t ancho = 8 * 6 * escala + 16 * 6 * escala;
-    const size_t alto = 7 * escala;
-
-    size_t x = fb->width > ancho ? (fb->width - ancho) / 2 : 0;
-    size_t y = fb->height / 2 + 132;
-
-    uint32_t fondo = fb_pixel(fb, 20, 10, 60);
-    uint32_t blanco = fb_pixel(fb, 255, 255, 255);
-
-    fb_fill_rect(fb, x, y, ancho, alto * 2 + 8, fondo);
-
-    fb_draw_reg(fb, x, y, "TECLAS:", idt_irq_count[1], blanco, escala);
-    fb_draw_reg(fb, x, y + alto + 8, "SCAN:", idt_last_scancode, blanco, escala);
-}
-
-// Punto de entrada del kernel.
+// Punto de entrada del kernel
 void kmain(void) {
     if (!LIMINE_BASE_REVISION_SUPPORTED(limine_base_revision)) {
         hcf();
     }
 
-    // Comprobamos que Limine haya proporcionado el HHDM.
+    // Comprobamos que Limine haya proporcionado el HHDM
     if (hhdm_request.response == NULL) {
         hcf();
     }
 
-    // Comprobamos que Limine haya proporcionado el mapa de memoria.
+    // Comprobamos que Limine haya proporcionado el mapa de memoria
     if (memory_map_request.response == NULL ||
         memory_map_request.response->entries == NULL ||
         memory_map_request.response->entry_count == 0) {
@@ -800,15 +784,12 @@ void kmain(void) {
     // __asm__ volatile ("ud2");                  // vector 6
     // *(volatile uint64_t*)0xDEADBEEF000 = 1;    // vector 14
 
-    // PRUEBA: habilitamos solo la IRQ1 (teclado) y las interrupciones.
+    // Mantiene la pantalla estable. 
+    // Habilitamos la interrupción del teclado (IRQ 1)
     pic_clear_mask(1);
-    __asm__ volatile ("sti");
 
-    fb_draw_keyboard_test(framebuffer);
-
-    // Dormimos hasta que llegue una interrupción y redibujamos.
+    // Esperamos interrupciones
     for (;;) {
-        __asm__ volatile ("hlt");
-        fb_draw_keyboard_test(framebuffer);
+        __asm__ volatile ("sti; hlt");
     }
 }
